@@ -239,20 +239,6 @@ If your server needs a proxy, set it in `accounts.json`:
 }
 ```
 
-## Files That Must Stay Private
-
-Do not upload these files:
-
-- `accounts.json`
-- `.nodeloc_state.json`
-- `cok.txt`
-- `*.har`
-- `reports/`
-- `output/`
-- `.env`
-
-These are ignored by `.gitignore`. Still, check before pushing. Secrets in Git history are a bad afternoon.
-
 ## Tests
 
 Run the test suite:

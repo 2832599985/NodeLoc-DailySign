@@ -242,20 +242,6 @@ Cron 示例：
 }
 ```
 
-## 不能上传的文件
-
-不要上传这些文件：
-
-- `accounts.json`
-- `.nodeloc_state.json`
-- `cok.txt`
-- `*.har`
-- `reports/`
-- `output/`
-- `.env`
-
-这些文件已经在 `.gitignore` 里。推送前仍然建议检查一遍，密钥进了 Git 历史会很烦。
-
 ## 测试
 
 运行测试：
