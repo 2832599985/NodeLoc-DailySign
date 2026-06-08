@@ -1,5 +1,7 @@
 # NodeLoc Daily Sign
 
+[中文文档](README.zh-CN.md) | English
+
 NodeLoc Daily Sign is a small Python maintainer for NodeLoc accounts. It can run daily check-in, verify account cookies, collect Discourse account stats, and optionally use Playwright to open real topic pages so normal frontend reading progress can be recorded.
 
 It does not auto-reply, create posts, submit fake large reading-time payloads, or coordinate multiple accounts to boost the same content.
@@ -184,11 +186,11 @@ Open [http://127.0.0.1:8787](http://127.0.0.1:8787).
 
 The console includes:
 
-- `总览`: account status and recent metrics.
-- `运行任务`: dry-run, check-in only, and full maintenance actions.
-- `实时日志`: task events as they happen.
-- `历史报告`: recent text reports.
-- `配置`: sanitized config view and editor.
+- Overview: account status and recent metrics.
+- Run tasks: dry-run, check-in only, and full maintenance actions.
+- Live logs: task events as they happen.
+- Reports: recent text reports.
+- Config: sanitized config view and editor.
 
 For LAN or public access, set a token:
 
