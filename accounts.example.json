@@ -1,0 +1,38 @@
+{
+  "accounts": [
+    {
+      "name": "account-1",
+      "cookie": "PASTE_COOKIE_HERE",
+      "csrf_token": ""
+    },
+    {
+      "name": "account-2",
+      "cookie": "PASTE_COOKIE_HERE",
+      "csrf_token": ""
+    }
+  ],
+  "delay_seconds": {
+    "min": 8,
+    "max": 25
+  },
+  "retry": {
+    "on_busy": 2,
+    "delay_seconds": 60
+  },
+  "reading": {
+    "enabled": false,
+    "minutes_per_account": 5,
+    "topics_per_account": 3,
+    "min_stay_seconds": 30,
+    "max_stay_seconds": 75,
+    "scrolls_per_topic": 8,
+    "headless": true,
+    "target_time_read_minutes": 0,
+    "target_topics_entered": 0,
+    "target_posts_read_count": 0,
+    "rescue_attempts": 2,
+    "rescue_topic_multiplier": 3
+  },
+  "timeout_seconds": 30,
+  "proxy": ""
+}

@@ -1,0 +1,1266 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NodeLoc 每日维护控制台</title>
+  <style>
+    :root {
+      --canvas: #f4f5f2;
+      --surface: #ffffff;
+      --surface-2: #f7f8f5;
+      --ink: #17201d;
+      --muted: #637068;
+      --line: #d6d8cf;
+      --nav: #1f2623;
+      --nav-muted: #a9b4ad;
+      --teal: #0d6f6a;
+      --teal-dark: #095550;
+      --brick: #a6422d;
+      --gold: #9b741f;
+      --green: #24764f;
+      --blue: #315d93;
+      --red: #a93131;
+      --shadow: 0 16px 42px rgba(30, 36, 31, .08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background: var(--canvas);
+      font-family: "Segoe UI", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+      letter-spacing: 0;
+    }
+
+    button, input, textarea, select {
+      font: inherit;
+      letter-spacing: 0;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+    }
+
+    .app-shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 260px minmax(0, 1fr);
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      display: grid;
+      grid-template-rows: auto auto 1fr auto;
+      gap: 18px;
+      padding: 20px 16px;
+      color: #f4f1e7;
+      background: var(--nav);
+      border-right: 1px solid rgba(255,255,255,.06);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 2px 4px 8px;
+    }
+
+    .brand-mark {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(255,255,255,.22);
+      border-radius: 8px;
+      background: #e7dcba;
+      color: #22251f;
+      font-weight: 800;
+    }
+
+    h1, h2, h3, p {
+      margin: 0;
+    }
+
+    h1 {
+      font-size: 18px;
+      line-height: 1.2;
+      font-weight: 760;
+    }
+
+    .brand span {
+      display: block;
+      margin-top: 3px;
+      color: var(--nav-muted);
+      font-size: 12px;
+    }
+
+    .side-status {
+      display: grid;
+      gap: 8px;
+      padding: 12px;
+      border: 1px solid rgba(255,255,255,.1);
+      background: rgba(255,255,255,.04);
+      border-radius: 8px;
+    }
+
+    .side-status div {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      color: var(--nav-muted);
+      font-size: 12px;
+    }
+
+    .side-status strong {
+      color: #fffef9;
+      font-weight: 650;
+      text-align: right;
+    }
+
+    .nav {
+      display: grid;
+      align-content: start;
+      gap: 6px;
+    }
+
+    .nav button {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 11px 12px;
+      border-radius: 8px;
+      color: var(--nav-muted);
+      background: transparent;
+      text-align: left;
+      font-weight: 650;
+    }
+
+    .nav button::after {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: transparent;
+    }
+
+    .nav button.active {
+      color: #fffef9;
+      background: rgba(255,255,255,.1);
+    }
+
+    .nav button.active::after {
+      background: #e6d7a8;
+    }
+
+    .sidebar-foot {
+      color: var(--nav-muted);
+      font-size: 12px;
+      line-height: 1.5;
+      padding: 0 4px;
+    }
+
+    .content {
+      min-width: 0;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 18px 28px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(244, 245, 242, .92);
+      backdrop-filter: blur(10px);
+    }
+
+    .eyebrow {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .topbar h2 {
+      margin-top: 4px;
+      font-size: 24px;
+      font-weight: 760;
+    }
+
+    .top-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .page {
+      min-width: 0;
+      padding: 24px 28px 36px;
+    }
+
+    .section-panel {
+      display: grid;
+      gap: 18px;
+      max-width: 1240px;
+    }
+
+    .section-panel[hidden] {
+      display: none;
+    }
+
+    .band {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .band-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .band-head h3 {
+      font-size: 15px;
+      font-weight: 760;
+    }
+
+    .band-head .muted {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .band-body {
+      padding: 18px;
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .metric {
+      min-height: 94px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-left: 4px solid var(--teal);
+      border-radius: 8px;
+      background: var(--surface);
+    }
+
+    .metric:nth-child(2) { border-left-color: var(--blue); }
+    .metric:nth-child(3) { border-left-color: var(--gold); }
+    .metric:nth-child(4) { border-left-color: var(--green); }
+
+    .metric span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .metric strong {
+      display: block;
+      margin-top: 10px;
+      font-size: 20px;
+      line-height: 1.2;
+      word-break: break-word;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      min-width: 840px;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 11px 10px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+      font-size: 14px;
+    }
+
+    th {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 760;
+      text-transform: uppercase;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      max-width: 100%;
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      background: #fbfaf4;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .badge.ok {
+      color: var(--green);
+      border-color: rgba(36,118,79,.24);
+      background: rgba(36,118,79,.08);
+    }
+
+    .badge.warn {
+      color: var(--gold);
+      border-color: rgba(166,118,23,.28);
+      background: rgba(166,118,23,.1);
+    }
+
+    .badge.error {
+      color: var(--red);
+      border-color: rgba(169,49,49,.28);
+      background: rgba(169,49,49,.08);
+    }
+
+    .toolbar, .form-grid {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: end;
+      gap: 12px;
+    }
+
+    .form-grid {
+      align-items: stretch;
+    }
+
+    label.field {
+      display: grid;
+      gap: 6px;
+      min-width: 150px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    label.check-field {
+      min-height: 42px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: var(--ink);
+      background: var(--surface);
+      font-size: 14px;
+      font-weight: 650;
+    }
+
+    input[type="number"], select {
+      height: 42px;
+      width: 100%;
+      padding: 0 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: var(--ink);
+      background: var(--surface);
+    }
+
+    .button {
+      min-height: 42px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 0 14px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      background: var(--teal);
+      color: #fff;
+      font-weight: 750;
+      white-space: nowrap;
+    }
+
+    .button:hover {
+      background: var(--teal-dark);
+    }
+
+    .button.secondary {
+      color: var(--ink);
+      background: var(--surface);
+      border-color: var(--line);
+    }
+
+    .button.secondary:hover {
+      background: var(--surface-2);
+    }
+
+    .button.warn {
+      background: var(--brick);
+    }
+
+    .button.warn:hover {
+      background: #873523;
+    }
+
+    .button:disabled {
+      opacity: .55;
+      cursor: not-allowed;
+    }
+
+    .job-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .job-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 16px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+    }
+
+    .job-title {
+      font-size: 15px;
+      font-weight: 760;
+    }
+
+    .job-subtitle {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .events {
+      height: calc(100vh - 230px);
+      min-height: 440px;
+      overflow: auto;
+      display: grid;
+      align-content: start;
+      gap: 8px;
+      padding: 14px;
+      background: #171d1a;
+      border-radius: 8px;
+    }
+
+    .event {
+      display: grid;
+      gap: 5px;
+      padding: 10px 12px;
+      border: 1px solid rgba(255,255,255,.08);
+      border-left: 4px solid #d8ca99;
+      border-radius: 8px;
+      background: rgba(255,255,255,.04);
+      color: #edf0ea;
+      font-size: 13px;
+    }
+
+    .event.error {
+      border-left-color: #e0827d;
+    }
+
+    .event .meta {
+      color: #aeb7ad;
+      font-size: 12px;
+    }
+
+    .report-layout {
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr);
+      min-height: 560px;
+    }
+
+    .report-list {
+      display: grid;
+      align-content: start;
+      gap: 6px;
+      padding: 12px;
+      border-right: 1px solid var(--line);
+      background: var(--surface-2);
+    }
+
+    .report-list button {
+      width: 100%;
+      min-height: 38px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      color: var(--ink);
+      background: transparent;
+      text-align: left;
+      font-size: 13px;
+      font-weight: 650;
+      word-break: break-word;
+    }
+
+    .report-list button.active,
+    .report-list button:hover {
+      background: var(--surface);
+      box-shadow: inset 0 0 0 1px var(--line);
+    }
+
+    pre, textarea {
+      margin: 0;
+      width: 100%;
+      min-height: 420px;
+      overflow: auto;
+      border: 0;
+      border-radius: 0;
+      white-space: pre-wrap;
+      font-family: "Cascadia Mono", Consolas, "Microsoft YaHei UI", monospace;
+      font-size: 13px;
+      line-height: 1.55;
+      letter-spacing: 0;
+    }
+
+    pre {
+      padding: 16px;
+      color: #eaf0ea;
+      background: #111714;
+    }
+
+    textarea {
+      min-height: 520px;
+      resize: vertical;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: var(--ink);
+      background: #fffefa;
+    }
+
+    .config-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 260px;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .config-side {
+      display: grid;
+      gap: 10px;
+    }
+
+    .notice {
+      padding: 12px;
+      border: 1px solid rgba(166,118,23,.24);
+      border-radius: 8px;
+      color: #65450b;
+      background: rgba(166,118,23,.08);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .empty {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    @media (max-width: 1040px) {
+      .app-shell {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: static;
+        height: auto;
+        grid-template-rows: auto auto auto;
+      }
+
+      .sidebar-foot {
+        display: none;
+      }
+
+      .nav {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+      }
+
+      .nav button {
+        justify-content: center;
+      }
+
+      .nav button::after {
+        display: none;
+      }
+
+      .metric-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .report-layout, .config-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .report-list {
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+    }
+
+    @media (max-width: 680px) {
+      .topbar {
+        align-items: stretch;
+        flex-direction: column;
+        padding: 16px;
+      }
+
+      .top-actions {
+        justify-content: stretch;
+      }
+
+      .top-actions .button,
+      .toolbar .button,
+      .job-row .button {
+        width: 100%;
+      }
+
+      .page {
+        padding: 16px;
+      }
+
+      .nav {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .metric-grid, .job-row {
+        grid-template-columns: 1fr;
+      }
+
+      .events {
+        height: 480px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">NL</div>
+        <div>
+          <h1>NodeLoc</h1>
+          <span>每日维护控制台</span>
+        </div>
+      </div>
+
+      <div class="side-status" aria-live="polite">
+        <div><span>服务</span><strong id="service-pill">连接中</strong></div>
+        <div><span>任务</span><strong id="task-pill">待命</strong></div>
+        <div><span>报告</span><strong id="report-pill">0 份</strong></div>
+      </div>
+
+      <nav class="nav" aria-label="控制台导航">
+        <button class="active" data-section="overview">总览</button>
+        <button data-section="run">运行任务</button>
+        <button data-section="logs">实时日志</button>
+        <button data-section="reports">历史报告</button>
+        <button data-section="config">配置</button>
+      </nav>
+
+      <div class="sidebar-foot">本机 Web 控制台 · NodeLoc-DailySign</div>
+    </aside>
+
+    <main class="content">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Console</p>
+          <h2 id="view-title">总览</h2>
+        </div>
+        <div class="top-actions">
+          <button class="button secondary" id="refresh-button" type="button">刷新状态</button>
+          <button class="button" type="button" id="quick-nav-button" data-section-link="run">去运行任务</button>
+        </div>
+      </header>
+
+      <div class="page">
+        <section class="section-panel" id="section-overview">
+          <div class="metric-grid">
+            <div class="metric">
+              <span>账号数量</span>
+              <strong id="summary-accounts">-</strong>
+            </div>
+            <div class="metric">
+              <span>当前任务</span>
+              <strong id="summary-task">待命</strong>
+            </div>
+            <div class="metric">
+              <span>最近报告</span>
+              <strong id="summary-report">暂无</strong>
+            </div>
+            <div class="metric">
+              <span>日志事件</span>
+              <strong id="summary-events">0</strong>
+            </div>
+          </div>
+
+          <div class="band">
+            <div class="band-head">
+              <h3>账号进度</h3>
+              <span class="muted" id="account-table-note">等待状态刷新</span>
+            </div>
+            <div class="band-body">
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>账号</th>
+                      <th>登录用户</th>
+                      <th>等级</th>
+                      <th>阅读分钟</th>
+                      <th>读过主题</th>
+                      <th>读过帖子</th>
+                      <th>本轮增长</th>
+                      <th>当前阶段</th>
+                    </tr>
+                  </thead>
+                  <tbody id="accounts-body">
+                    <tr><td colspan="8" class="empty">正在读取账号列表...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section-panel" id="section-run" hidden>
+          <div class="band">
+            <div class="band-head">
+              <h3>运行参数</h3>
+              <span class="muted" id="run-status">没有正在运行的任务</span>
+            </div>
+            <div class="band-body">
+              <div class="form-grid">
+                <label class="field">最多账号
+                  <input id="max-accounts" type="number" min="1" max="99" placeholder="全部">
+                </label>
+                <label class="field">完整轮数
+                  <input id="rounds" type="number" min="1" max="20" value="1">
+                </label>
+                <label class="field">每号阅读分钟
+                  <input id="reading-minutes" type="number" min="0" step="0.1" placeholder="按配置">
+                </label>
+                <label class="field">每号主题数
+                  <input id="topics-per-account" type="number" min="1" max="20" placeholder="按配置">
+                </label>
+                <label class="check-field">
+                  <input type="checkbox" id="force-reading">
+                  强制读帖
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="band">
+            <div class="band-head">
+              <h3>任务动作</h3>
+              <span class="muted">一次只能运行一个任务</span>
+            </div>
+            <div class="band-body">
+              <div class="job-list">
+                <div class="job-row">
+                  <div>
+                    <div class="job-title">检查账号状态</div>
+                    <div class="job-subtitle">Dry-run：读取账号、签到状态、阅读判定，不执行真实签到或浏览器读帖。</div>
+                  </div>
+                  <button class="button secondary" type="button" data-job-button onclick="startJob('dry_run')">开始检查</button>
+                </div>
+                <div class="job-row">
+                  <div>
+                    <div class="job-title">执行每日维护：只签到</div>
+                    <div class="job-subtitle">会按本地完成记录跳过已签到账号，不打开浏览器进帖阅读。</div>
+                  </div>
+                  <button class="button" type="button" data-job-button onclick="startJob('maintain_no_reading')">开始签到</button>
+                </div>
+                <div class="job-row">
+                  <div>
+                    <div class="job-title">执行每日维护：签到 + 读帖</div>
+                    <div class="job-subtitle">会进入帖子阅读，并在阅读增长没有变化时自动换一批主题重试。</div>
+                  </div>
+                  <button class="button warn" type="button" data-job-button onclick="startJob('maintain_with_reading')">开始完整维护</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section-panel" id="section-logs" hidden>
+          <div class="band">
+            <div class="band-head">
+              <h3>实时日志</h3>
+              <div class="toolbar">
+                <select id="event-filter" aria-label="日志筛选">
+                  <option value="all">全部事件</option>
+                  <option value="account">账号事件</option>
+                  <option value="system">系统事件</option>
+                  <option value="error">错误事件</option>
+                </select>
+                <button class="button secondary" type="button" id="clear-events">清空显示</button>
+              </div>
+            </div>
+            <div class="band-body">
+              <div class="events" id="events"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section-panel" id="section-reports" hidden>
+          <div class="band">
+            <div class="band-head">
+              <h3>历史报告</h3>
+              <button class="button secondary" type="button" id="refresh-reports">刷新报告</button>
+            </div>
+            <div class="report-layout">
+              <div class="report-list" id="report-list"></div>
+              <pre id="report-preview">请选择一份报告查看内容。</pre>
+            </div>
+          </div>
+        </section>
+
+        <section class="section-panel" id="section-config" hidden>
+          <div class="band">
+            <div class="band-head">
+              <h3>配置</h3>
+              <div class="toolbar">
+                <button class="button secondary" type="button" onclick="loadConfig()">重新载入</button>
+                <button class="button warn" type="button" onclick="saveConfig()">保存并备份</button>
+              </div>
+            </div>
+            <div class="band-body">
+              <div class="config-grid">
+                <textarea id="config-box" spellcheck="false">正在载入配置...</textarea>
+                <div class="config-side">
+                  <div class="notice">Cookie 和 CSRF 字段会以脱敏形式显示；保存时保留原始密钥字段。</div>
+                  <div class="notice" id="config-result">配置未保存。</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    let eventCursor = 0;
+    const accountState = new Map();
+    const eventStore = [];
+    let selectedReport = null;
+
+    const sectionTitles = {
+      overview: '总览',
+      run: '运行任务',
+      logs: '实时日志',
+      reports: '历史报告',
+      config: '配置'
+    };
+
+    const modeLabels = {
+      dry_run: '检查账号状态',
+      maintain_no_reading: '只签到',
+      maintain_with_reading: '签到 + 读帖'
+    };
+
+    const statusLabels = {
+      running: '运行中',
+      succeeded: '已完成',
+      failed: '失败'
+    };
+
+    const eventLabels = {
+      job_started: '任务开始',
+      job_finished: '任务结束',
+      job_failed: '任务失败',
+      account_start: '账号开始',
+      cookie_ok: 'Cookie 有效',
+      cookie_failed: 'Cookie 失效',
+      stats_before: '初始指标',
+      checkin: '签到结果',
+      reading_decision: '阅读判定',
+      topics_found: '主题候选',
+      reading_start: '开始读帖',
+      reading_rescue_start: '换主题重试',
+      reading_rescue_exhausted: '主题耗尽',
+      stats_after: '更新指标',
+      stats_after_failed: '指标刷新失败',
+      reading_complete: '阅读完成',
+      reading_failed: '阅读失败',
+      metrics_delta: '增长结算',
+      account_delta: '账号增长',
+      round_start: '轮次开始',
+      round_complete: '轮次完成',
+      report_saved: '报告保存',
+      run_complete: '全部完成',
+      status_error: '状态错误',
+      config_error: '配置错误',
+      config_saved: '配置保存'
+    };
+
+    async function api(path, options = {}) {
+      const token = sessionStorage.getItem('nodeloc_token');
+      const headers = Object.assign({'Content-Type': 'application/json'}, options.headers || {});
+      if (token) headers.Authorization = `Bearer ${token}`;
+      const response = await fetch(path, Object.assign({}, options, {headers}));
+      if (response.status === 401) {
+        const entered = prompt('请输入 Web Token');
+        if (entered) {
+          sessionStorage.setItem('nodeloc_token', entered);
+          return api(path, options);
+        }
+      }
+      if (!response.ok) throw new Error(await response.text());
+      return response;
+    }
+
+    async function refreshStatus() {
+      const response = await api('/api/status');
+      const data = await response.json();
+      const current = data.tasks.current;
+      const running = current?.status === 'running';
+
+      setText('service-pill', '在线');
+      setText('task-pill', running ? '运行中' : (current ? statusLabel(current.status) : '待命'));
+      setText('report-pill', `${data.reports.length} 份`);
+      setText('summary-accounts', `${data.accounts.length} 个`);
+      setText('summary-task', current ? taskSummary(current) : '待命');
+      setText('summary-report', data.reports[0]?.name || '暂无');
+      setText('account-table-note', running ? '任务运行中，数据会自动更新' : '显示最近一次任务数据');
+      setText('run-status', current ? taskSummary(current) : '没有正在运行的任务');
+
+      for (const account of data.accounts) {
+        if (!accountState.has(account.name)) {
+          accountState.set(account.name, {name: account.name, stage: '等待任务'});
+        }
+      }
+      for (const event of (current?.events || [])) applyEvent(event, false);
+      setJobButtons(running);
+      renderAccounts();
+      renderReports(data.reports);
+    }
+
+    async function startJob(mode) {
+      const maxRaw = document.getElementById('max-accounts').value;
+      const roundsRaw = document.getElementById('rounds').value;
+      const minutesRaw = document.getElementById('reading-minutes').value;
+      const topicsRaw = document.getElementById('topics-per-account').value;
+      const body = {
+        mode,
+        force_reading: document.getElementById('force-reading').checked,
+        max_accounts: maxRaw ? Number(maxRaw) : null,
+        rounds: roundsRaw ? Number(roundsRaw) : 1,
+        reading_minutes: minutesRaw ? Number(minutesRaw) : null,
+        topics_per_account: topicsRaw ? Number(topicsRaw) : null
+      };
+
+      try {
+        setJobButtons(true);
+        await api('/api/jobs', {method: 'POST', body: JSON.stringify(body)});
+        rememberEvent(localEvent('info', 'job_started', `${modeLabels[mode] || mode} 已提交`, null, {mode}));
+        await refreshStatus();
+        showSection('logs');
+      } catch (error) {
+        setJobButtons(false);
+        rememberEvent(localEvent('error', 'job_failed', error.message));
+        alert(error.message);
+      }
+    }
+
+    function applyEvent(event, append = true) {
+      eventCursor = Math.max(eventCursor, Number(event.id) || 0);
+      if (event.account_name) updateAccountFromEvent(event);
+      if (append) rememberEvent(event);
+      renderAccounts();
+    }
+
+    function updateAccountFromEvent(event) {
+      const item = accountState.get(event.account_name) || {name: event.account_name};
+      item.stage = eventLabel(event.type);
+      item.lastMessage = event.message;
+
+      if (event.type === 'cookie_ok') {
+        item.username = event.data.username;
+        item.trust_level = event.data.trust_level;
+      }
+      if (event.type === 'stats_before' || event.type === 'stats_after') {
+        item.username = event.data.username || item.username;
+        item.trust_level = event.data.trust_level ?? item.trust_level;
+        item.time_read_minutes = event.data.time_read_minutes;
+        item.topics_entered = event.data.topics_entered;
+        item.posts_read_count = event.data.posts_read_count;
+        if (event.data.delta) item.delta = formatDelta(event.data.delta);
+      }
+      if (event.type === 'checkin') {
+        item.checkin = event.data.busy ? '繁忙' : (event.data.completed ? '已完成' : (event.data.ok ? '成功' : '异常'));
+      }
+      if (event.type === 'reading_decision') {
+        item.readingTarget = event.data.should_read ? `${formatSeconds(event.data.target_seconds)}目标` : '无需读帖';
+      }
+      if (event.type === 'reading_start') {
+        item.readingTarget = `第 ${event.data.attempt || 1} 轮`;
+      }
+      if (event.type === 'reading_complete') {
+        item.readingTarget = `${event.data.topics_visited || 0} 主题 / ${formatSeconds(event.data.seconds_spent || 0)}`;
+      }
+      if (event.type === 'metrics_delta' || event.type === 'account_delta') {
+        item.delta = formatDelta(event.data);
+      }
+      if (event.level === 'error' || event.type.endsWith('_failed')) {
+        item.error = event.message;
+      }
+      accountState.set(event.account_name, item);
+    }
+
+    function renderAccounts() {
+      const body = document.getElementById('accounts-body');
+      const rows = Array.from(accountState.values()).map(item => {
+        const stageClass = item.error ? 'error' : stageClassName(item.stage);
+        const stageText = item.error || item.stage || '等待任务';
+        return `
+          <tr>
+            <td>${escapeHtml(item.name)}</td>
+            <td>${escapeHtml(item.username || '-')}</td>
+            <td>${item.trust_level ?? '-'}</td>
+            <td>${item.time_read_minutes ?? '-'}</td>
+            <td>${item.topics_entered ?? '-'}</td>
+            <td>${item.posts_read_count ?? '-'}</td>
+            <td>${escapeHtml(item.delta || item.readingTarget || item.checkin || '-')}</td>
+            <td><span class="badge ${stageClass}">${escapeHtml(stageText)}</span></td>
+          </tr>
+        `;
+      });
+      body.innerHTML = rows.join('') || '<tr><td colspan="8" class="empty">没有读取到账号。</td></tr>';
+    }
+
+    function renderReports(reports) {
+      const list = document.getElementById('report-list');
+      list.innerHTML = '';
+      if (!reports.length) {
+        list.innerHTML = '<span class="empty">暂无报告</span>';
+        return;
+      }
+      for (const report of reports) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = report.name;
+        button.className = selectedReport === report.name ? 'active' : '';
+        button.addEventListener('click', () => loadReport(report.name));
+        list.appendChild(button);
+      }
+    }
+
+    async function loadReport(name) {
+      selectedReport = name;
+      const response = await api(`/api/reports/${encodeURIComponent(name)}`);
+      document.getElementById('report-preview').textContent = await response.text();
+      await refreshStatus();
+    }
+
+    async function loadConfig() {
+      const response = await api('/api/config');
+      const data = await response.json();
+      document.getElementById('config-box').value = JSON.stringify(data, null, 2);
+      setText('config-result', '配置已载入。');
+    }
+
+    async function saveConfig() {
+      if (!confirm('保存会更新 accounts.json，并先生成备份。确认继续？')) return;
+      let data;
+      try {
+        data = JSON.parse(document.getElementById('config-box').value);
+      } catch (error) {
+        alert(`JSON 格式错误: ${error.message}`);
+        return;
+      }
+      const response = await api('/api/config', {method: 'PUT', body: JSON.stringify(data)});
+      const result = await response.json();
+      document.getElementById('config-box').value = JSON.stringify(result.config, null, 2);
+      setText('config-result', `已保存，备份: ${result.backup}`);
+      rememberEvent(localEvent('info', 'config_saved', `配置已保存，备份: ${result.backup}`));
+      await refreshStatus();
+    }
+
+    function rememberEvent(event) {
+      if (event.id && eventStore.some(item => item.id === event.id)) return;
+      eventStore.unshift(event);
+      eventStore.splice(300);
+      setText('summary-events', `${eventStore.length}`);
+      renderEventList();
+    }
+
+    function renderEventList() {
+      const box = document.getElementById('events');
+      const filter = document.getElementById('event-filter').value;
+      const visible = eventStore.filter(event => {
+        if (filter === 'error') return event.level === 'error';
+        if (filter === 'account') return Boolean(event.account_name);
+        if (filter === 'system') return !event.account_name;
+        return true;
+      });
+      if (!visible.length) {
+        box.innerHTML = '<div class="event"><div class="meta">等待事件</div><div>暂无符合筛选条件的日志。</div></div>';
+        return;
+      }
+      box.innerHTML = visible.map(event => {
+        const time = new Date((event.ts || Date.now() / 1000) * 1000).toLocaleTimeString();
+        const owner = event.account_name || 'system';
+        return `
+          <div class="event ${event.level === 'error' ? 'error' : ''}">
+            <div class="meta">#${event.id || '-'} ${time} · ${escapeHtml(owner)} · ${escapeHtml(eventLabel(event.type))}</div>
+            <div>${escapeHtml(event.message || '')}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function connectEvents() {
+      const token = sessionStorage.getItem('nodeloc_token');
+      const tokenQuery = token ? `&token=${encodeURIComponent(token)}` : '';
+      const source = new EventSource(`/api/events?last_event_id=${eventCursor}${tokenQuery}`);
+      source.addEventListener('task', event => applyEvent(JSON.parse(event.data)));
+      source.onerror = () => {
+        source.close();
+        setTimeout(connectEvents, 2000);
+      };
+    }
+
+    function showSection(name) {
+      for (const key of Object.keys(sectionTitles)) {
+        document.getElementById(`section-${key}`).hidden = key !== name;
+      }
+      document.querySelectorAll('.nav button').forEach(button => {
+        button.classList.toggle('active', button.dataset.section === name);
+      });
+      setText('view-title', sectionTitles[name] || name);
+      updateQuickNav(name);
+    }
+
+    function updateQuickNav(name) {
+      const button = document.getElementById('quick-nav-button');
+      if (!button) return;
+      if (name === 'run') {
+        button.dataset.sectionLink = 'overview';
+        button.textContent = '回到总览';
+      } else {
+        button.dataset.sectionLink = 'run';
+        button.textContent = '去运行任务';
+      }
+    }
+
+    function setJobButtons(running) {
+      document.querySelectorAll('[data-job-button]').forEach(button => {
+        button.disabled = running;
+      });
+    }
+
+    function taskSummary(task) {
+      const mode = modeLabels[task.options?.mode] || task.options?.mode || '任务';
+      const rounds = Number(task.options?.rounds || 1);
+      const roundText = rounds > 1 ? ` · ${rounds} 轮` : '';
+      return `${mode}${roundText} · ${statusLabel(task.status)}`;
+    }
+
+    function statusLabel(status) {
+      return statusLabels[status] || status || '-';
+    }
+
+    function eventLabel(type) {
+      return eventLabels[type] || type || '-';
+    }
+
+    function stageClassName(stage) {
+      if (!stage) return '';
+      if (stage.includes('失败') || stage.includes('失效') || stage.includes('错误')) return 'error';
+      if (stage.includes('重试') || stage.includes('耗尽') || stage.includes('繁忙')) return 'warn';
+      if (stage.includes('完成') || stage.includes('有效') || stage.includes('保存') || stage.includes('结束')) return 'ok';
+      return '';
+    }
+
+    function formatDelta(data) {
+      const seconds = data.time_read_seconds || 0;
+      const topics = data.topics_entered || 0;
+      const posts = data.posts_read_count || 0;
+      return `+${formatSeconds(seconds)} / +${topics} 主题 / +${posts} 帖子`;
+    }
+
+    function formatSeconds(seconds) {
+      const value = Number(seconds) || 0;
+      if (value < 60) return `${value}s`;
+      const minutes = Math.floor(value / 60);
+      const rest = value % 60;
+      return rest ? `${minutes}m${rest}s` : `${minutes}m`;
+    }
+
+    function localEvent(level, type, message, accountName = null, data = {}) {
+      return {
+        id: 0,
+        ts: Date.now() / 1000,
+        level,
+        type,
+        account_name: accountName,
+        message,
+        data
+      };
+    }
+
+    function setText(id, value) {
+      const node = document.getElementById(id);
+      if (node) node.textContent = value;
+    }
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[char]));
+    }
+
+    document.querySelectorAll('.nav button, [data-section-link]').forEach(button => {
+      button.addEventListener('click', () => showSection(button.dataset.section || button.dataset.sectionLink));
+    });
+    document.getElementById('refresh-button').addEventListener('click', () => refreshStatus().catch(showError));
+    document.getElementById('refresh-reports').addEventListener('click', () => refreshStatus().catch(showError));
+    document.getElementById('event-filter').addEventListener('change', renderEventList);
+    document.getElementById('clear-events').addEventListener('click', () => {
+      eventStore.length = 0;
+      setText('summary-events', '0');
+      renderEventList();
+    });
+
+    function showError(error) {
+      rememberEvent(localEvent('error', 'status_error', error.message));
+    }
+
+    renderEventList();
+    refreshStatus().catch(showError);
+    loadConfig().catch(error => rememberEvent(localEvent('error', 'config_error', error.message)));
+    connectEvents();
+    setInterval(() => refreshStatus().catch(showError), 5000);
+  </script>
+</body>
+</html>

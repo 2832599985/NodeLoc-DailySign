@@ -1,0 +1,32 @@
+accounts.json
+.nodeloc_state.json
+cok.txt
+cookies.txt
+*.cookie
+*.cookies
+*.har
+*.har.gz
+*.backup-*.json
+.env
+.env.*
+!.env.example
+
+# Generated runtime data
+reports/
+output/
+.research/
+
+# Python / test cache
+*.log
+__pycache__/
+.pytest_cache/
+*.pyc
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# Local environments
+.venv/
+venv/
+env/
